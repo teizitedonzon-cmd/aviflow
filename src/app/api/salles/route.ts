@@ -5,6 +5,7 @@ import { getProducteurIdOuNull } from "@/lib/session";
 import Ferme from "@/models/Ferme";
 import Bande from "@/models/Bande";
 import Salle from "@/models/Salle";
+import { migrerEffectifsSalles } from "@/lib/repartirEffectifs";
 
 async function verifierProprieteBande(bandeId: string, producteurId: string) {
   const bande = await Bande.findById(bandeId);
@@ -31,6 +32,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Bande introuvable" }, { status: 404 });
   }
 
+  await migrerEffectifsSalles(bandeId);
+
   const salles = await Salle.find({ bandeId }).sort({ createdAt: 1 });
   return NextResponse.json(salles);
 }
@@ -48,6 +51,7 @@ export async function POST(request: Request) {
   }
 
   await connectToDatabase();
+  await migrerEffectifsSalles(bandeId);
   const session = await mongoose.startSession();
 
   try {
@@ -82,6 +86,7 @@ export async function POST(request: Request) {
         nom: nom.trim(),
         capacite: capaciteNombre,
         effectifInitial,
+        effectifVivant: effectifInitial,
         equipements: typeof equipements === "string" ? equipements.trim() || undefined : undefined,
       }], { session }).then(([salle]) => salle);
     });
