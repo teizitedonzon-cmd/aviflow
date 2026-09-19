@@ -17,4 +17,7 @@ const PeseeSchema = new Schema<IPesee>(
   { timestamps: true }
 );
 
+// Lecture principale : toutes les pesées d'une salle dans l'ordre chronologique.
+PeseeSchema.index({ salleId: 1, date: 1 });
+
 export default models.Pesee || model<IPesee>("Pesee", PeseeSchema);
