@@ -4,6 +4,8 @@ export interface ISalle {
   _id: string;
   nom: string;
   capacite: number;
+  /** Nombre de sujets réellement placés dans cette salle à sa création. */
+  effectifInitial: number;
   equipements?: string;
   bandeId: Types.ObjectId;
   createdAt: Date;
@@ -13,6 +15,7 @@ const SalleSchema = new Schema<ISalle>(
   {
     nom: { type: String, required: true },
     capacite: { type: Number, required: true, min: 1 },
+    effectifInitial: { type: Number, required: true, min: 1 },
     equipements: { type: String },
     bandeId: { type: Schema.Types.ObjectId, ref: "Bande", required: true, index: true },
   },
