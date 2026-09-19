@@ -64,12 +64,11 @@ export function CourbeCroissance({ pesees }: { pesees: Pesee[] }) {
 }
 
 export function CourbeMortaliteCumulee({ fiches, effectifInitial }: { fiches: Fiche[]; effectifInitial: number }) {
-  let cumul = 0;
-  const data = fiches.map((f) => {
-    cumul += f.mortalite;
+  const data = fiches.map((f, index) => {
+    const cumul = fiches.slice(0, index + 1).reduce((total, fiche) => total + fiche.mortalite, 0);
     return {
       date: formatDateCourt(f.date),
-      taux: Number(((cumul / effectifInitial) * 100).toFixed(2)),
+      taux: effectifInitial > 0 ? Number(((cumul / effectifInitial) * 100).toFixed(2)) : 0,
     };
   });
   return (
@@ -86,9 +85,8 @@ export function CourbeMortaliteCumulee({ fiches, effectifInitial }: { fiches: Fi
 }
 
 export function CourbeTauxPonte({ fiches, effectifInitial }: { fiches: Fiche[]; effectifInitial: number }) {
-  let mortaliteCumulee = 0;
-  const data = fiches.map((f) => {
-    mortaliteCumulee += f.mortalite;
+  const data = fiches.map((f, index) => {
+    const mortaliteCumulee = fiches.slice(0, index + 1).reduce((total, fiche) => total + fiche.mortalite, 0);
     const effectifVivant = Math.max(effectifInitial - mortaliteCumulee, 1);
     const taux = f.productionOeufs != null ? (f.productionOeufs / effectifVivant) * 100 : null;
     return { date: formatDateCourt(f.date), taux: taux != null ? Number(taux.toFixed(1)) : null };
@@ -107,9 +105,8 @@ export function CourbeTauxPonte({ fiches, effectifInitial }: { fiches: Fiche[]; 
 }
 
 export function CourbeConsommationParTete({ fiches, effectifInitial }: { fiches: Fiche[]; effectifInitial: number }) {
-  let mortaliteCumulee = 0;
-  const data = fiches.map((f) => {
-    mortaliteCumulee += f.mortalite;
+  const data = fiches.map((f, index) => {
+    const mortaliteCumulee = fiches.slice(0, index + 1).reduce((total, fiche) => total + fiche.mortalite, 0);
     const effectifVivant = Math.max(effectifInitial - mortaliteCumulee, 1);
     return {
       date: formatDateCourt(f.date),
