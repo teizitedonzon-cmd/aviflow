@@ -26,7 +26,7 @@ export async function PUT(request: Request, { params }: Params) {
   }
 
   const { id } = await params;
-  const updates = await request.json();
+  const body = await request.json();
 
   await connectToDatabase();
   const ficheExistante = await trouverFicheAutorisee(id, producteurId);
@@ -35,7 +35,11 @@ export async function PUT(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Fiche introuvable" }, { status: 404 });
   }
 
-  const fiche = await FicheBilanJournalier.findByIdAndUpdate(id, updates, { new: true });
+  const updates: Record<string, unknown> = {};
+  for (const champ of ["mortalite", "alimentConsommeKg", "eauConsommeeL", "traitements", "observations", "productionOeufs"]) {
+    if (body[champ] !== undefined) updates[champ] = body[champ];
+  }
+  const fiche = await FicheBilanJournalier.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
   return NextResponse.json(fiche);
 }
 
