@@ -4,6 +4,8 @@ import { getProducteurIdOuNull } from "@/lib/session";
 import Ferme from "@/models/Ferme";
 import Bande from "@/models/Bande";
 import Salle from "@/models/Salle";
+import FicheBilanJournalier from "@/models/FicheBilanJournalier";
+import Pesee from "@/models/Pesee";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -40,8 +42,7 @@ export async function PUT(request: Request, { params }: Params) {
   }
 
   const { id } = await params;
-  const updates = await request.json();
-
+  const body = await request.json();
   await connectToDatabase();
   const salleExistante = await trouverSalleAutorisee(id, producteurId);
 
@@ -49,7 +50,21 @@ export async function PUT(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Salle introuvable" }, { status: 404 });
   }
 
-  const salle = await Salle.findByIdAndUpdate(id, updates, { new: true });
+  const updates: Record<string, string | number | undefined> = {};
+  if (typeof body.nom === "string" && body.nom.trim()) updates.nom = body.nom.trim();
+  if (typeof body.equipements === "string") updates.equipements = body.equipements.trim() || undefined;
+  if (body.capacite !== undefined) {
+    const capacite = Number(body.capacite);
+    if (!Number.isInteger(capacite) || capacite < salleExistante.effectifInitial) {
+      return NextResponse.json(
+        { error: "La capacité doit être un entier au moins égal à l'effectif attribué" },
+        { status: 400 }
+      );
+    }
+    updates.capacite = capacite;
+  }
+
+  const salle = await Salle.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
   return NextResponse.json(salle);
 }
 
@@ -67,6 +82,10 @@ export async function DELETE(_request: Request, { params }: Params) {
     return NextResponse.json({ error: "Salle introuvable" }, { status: 404 });
   }
 
+  await Promise.all([
+    FicheBilanJournalier.deleteMany({ salleId: id }),
+    Pesee.deleteMany({ salleId: id }),
+  ]);
   await Salle.findByIdAndDelete(id);
   return NextResponse.json({ success: true });
 }
