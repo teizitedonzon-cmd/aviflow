@@ -36,7 +36,7 @@ export default function StatistiquesPage() {
 
   if (chargement) return <div className="container"><p style={{ padding: "2rem" }}>Chargement...</p></div>;
 
-  const effectifInitial = salle?.effectifInitial ?? 1;
+  const effectifInitial = salle?.effectifInitial ?? 0;
 
   return (
     <div className="container">
