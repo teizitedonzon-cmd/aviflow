@@ -39,6 +39,25 @@ export async function PUT(request: Request, { params }: Params) {
   for (const champ of ["mortalite", "alimentConsommeKg", "eauConsommeeL", "traitements", "observations", "productionOeufs"]) {
     if (body[champ] !== undefined) updates[champ] = body[champ];
   }
+  if (updates.mortalite !== undefined) {
+    const nouvelleMortalite = Number(updates.mortalite);
+    if (!Number.isInteger(nouvelleMortalite) || nouvelleMortalite < 0) {
+      return NextResponse.json({ error: "La mortalité doit être un entier positif" }, { status: 400 });
+    }
+    const difference = nouvelleMortalite - ficheExistante.mortalite;
+    if (difference > 0) {
+      const salle = await Salle.findOneAndUpdate(
+        { _id: ficheExistante.salleId, effectifVivant: { $gte: difference } },
+        { $inc: { effectifVivant: -difference } }
+      );
+      if (!salle) {
+        return NextResponse.json({ error: "La mortalité dépasse l'effectif vivant" }, { status: 400 });
+      }
+    } else if (difference < 0) {
+      await Salle.findByIdAndUpdate(ficheExistante.salleId, { $inc: { effectifVivant: -difference } });
+    }
+    updates.mortalite = nouvelleMortalite;
+  }
   const fiche = await FicheBilanJournalier.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
   return NextResponse.json(fiche);
 }
@@ -57,6 +76,9 @@ export async function DELETE(_request: Request, { params }: Params) {
     return NextResponse.json({ error: "Fiche introuvable" }, { status: 404 });
   }
 
+  await Salle.findByIdAndUpdate(ficheExistante.salleId, {
+    $inc: { effectifVivant: ficheExistante.mortalite },
+  });
   await FicheBilanJournalier.findByIdAndDelete(id);
   return NextResponse.json({ success: true });
 }
