@@ -3,6 +3,10 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { getProducteurIdOuNull } from "@/lib/session";
 import Ferme from "@/models/Ferme";
 import Bande from "@/models/Bande";
+import Salle from "@/models/Salle";
+import FicheBilanJournalier from "@/models/FicheBilanJournalier";
+import Pesee from "@/models/Pesee";
+import CalendrierVaccination from "@/models/CalendrierVaccination";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -37,7 +41,7 @@ export async function PUT(request: Request, { params }: Params) {
   }
 
   const { id } = await params;
-  const updates = await request.json();
+  const body = await request.json();
 
   await connectToDatabase();
   const bandeExistante = await trouverBandeAutorisee(id, producteurId);
@@ -46,7 +50,11 @@ export async function PUT(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Bande introuvable" }, { status: 404 });
   }
 
-  const bande = await Bande.findByIdAndUpdate(id, updates, { new: true });
+  const updates: Record<string, unknown> = {};
+  for (const champ of ["nom", "race", "typeElevage", "dateMiseEnPlace", "poidsInitial", "fournisseur", "statut"]) {
+    if (body[champ] !== undefined) updates[champ] = body[champ];
+  }
+  const bande = await Bande.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
   return NextResponse.json(bande);
 }
 
@@ -64,6 +72,14 @@ export async function DELETE(_request: Request, { params }: Params) {
     return NextResponse.json({ error: "Bande introuvable" }, { status: 404 });
   }
 
+  const salles = await Salle.find({ bandeId: id }).select("_id").lean();
+  const salleIds = salles.map((salle) => salle._id);
+  await Promise.all([
+    FicheBilanJournalier.deleteMany({ salleId: { $in: salleIds } }),
+    Pesee.deleteMany({ salleId: { $in: salleIds } }),
+    Salle.deleteMany({ bandeId: id }),
+    CalendrierVaccination.deleteMany({ bandeId: id }),
+  ]);
   await Bande.findByIdAndDelete(id);
   return NextResponse.json({ success: true });
 }
