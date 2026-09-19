@@ -297,7 +297,7 @@ import styles from "@/app/shared.module.css";
 import { SalleNav } from "@/components/SalleNav";
 
 interface Fiche { mortalite: number; }
-interface Salle { _id: string; nom: string; capacite: number; effectifInitial: number; }
+interface Salle { _id: string; nom: string; capacite: number; effectifInitial: number; effectifVivant: number; }
 interface Bande { _id: string; nom: string; }
 
 export default function SalleDashboardPage() {
@@ -317,10 +317,13 @@ export default function SalleDashboardPage() {
 
   if (chargement) return <div className="container"><p style={{ padding: "2rem" }}>Chargement...</p></div>;
 
-  const effectifInitial = salle?.effectifInitial ?? 1;
+  const effectifInitial = salle?.effectifInitial ?? 0;
+  const effectifVivantEnregistre = salle?.effectifVivant;
   const mortaliteCumulee = fiches.reduce((acc, f) => acc + f.mortalite, 0);
-  const effectifVivant = Math.max(effectifInitial - mortaliteCumulee, 0);
-  const tauxMortalite = ((mortaliteCumulee / effectifInitial) * 100).toFixed(1);
+  const effectifVivant = effectifVivantEnregistre ?? Math.max(effectifInitial - mortaliteCumulee, 0);
+  const tauxMortalite = effectifInitial > 0
+    ? ((mortaliteCumulee / effectifInitial) * 100).toFixed(1)
+    : "—";
 
   return (
     <div className="container">
