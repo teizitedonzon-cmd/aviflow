@@ -18,6 +18,7 @@ const CalendrierVaccinationSchema = new Schema<ICalendrierVaccination>({
   statut: { type: String, enum: ["a_faire", "fait", "manque"], default: "a_faire" },
   dateReelle: { type: Date },
 });
+CalendrierVaccinationSchema.index({ bandeId: 1, jourAge: 1 });
 
 export default models.CalendrierVaccination ||
   model<ICalendrierVaccination>("CalendrierVaccination", CalendrierVaccinationSchema);
