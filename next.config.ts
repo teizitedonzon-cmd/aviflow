@@ -5,7 +5,7 @@
 // };
 
 // export default nextConfig;
-import { NextConfig } from 'next';
+import type { NextConfig } from 'next';
 const nextConfig = {
   distDir: 'build', // Change le dossier de .next à 'build'
 };
