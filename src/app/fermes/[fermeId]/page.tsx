@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useState, FormEvent } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import styles from "@/app/shared.module.css";
-import { SalleNav } from "@/components/SalleNav";
 
 interface Bande {
   _id: string;
@@ -25,6 +24,7 @@ interface Ferme {
 
 export default function FermePage() {
   const { fermeId } = useParams<{ fermeId: string }>();
+  const router = useRouter();
   const [ferme, setFerme] = useState<Ferme | null>(null);
   const [bandes, setBandes] = useState<Bande[]>([]);
   const [chargement, setChargement] = useState(true);
@@ -71,6 +71,26 @@ export default function FermePage() {
     setAfficherForm(false);
   }
 
+  async function modifierFerme() {
+    if (!ferme) return;
+    const nomModifie = window.prompt("Nom de la ferme", ferme.nom);
+    if (!nomModifie?.trim()) return;
+    const localisation = window.prompt("Localisation", ferme.localisation ?? "");
+    const reponse = await fetch(`/api/fermes/${fermeId}`, {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nom: nomModifie.trim(), localisation: localisation ?? "" }),
+    });
+    if (!reponse.ok) return alert("Modification impossible");
+    setFerme(await reponse.json());
+  }
+
+  async function supprimerFerme() {
+    if (!window.confirm("Supprimer cette ferme et toutes ses données ?")) return;
+    const reponse = await fetch(`/api/fermes/${fermeId}`, { method: "DELETE" });
+    if (!reponse.ok) return alert("Suppression impossible");
+    router.push("/dashboard");
+  }
+
   if (chargement) return <div className="container"><p style={{ padding: "2rem" }}>Chargement...</p></div>;
 
   return (
@@ -95,6 +115,8 @@ export default function FermePage() {
           <Link href={`/fermes/${fermeId}/rapport`} className={styles.secondaryBtn}>
             Rapport PDF
           </Link>
+          <button className={styles.secondaryBtn} onClick={modifierFerme}>Modifier</button>
+          <button className={styles.secondaryBtn} onClick={supprimerFerme}>Supprimer</button>
           <button className={styles.newBtn} onClick={() => setAfficherForm((v) => !v)}>
             + Nouvelle bande
           </button>
