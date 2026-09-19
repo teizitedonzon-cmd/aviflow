@@ -6,6 +6,7 @@ import Bande from "@/models/Bande";
 import Salle from "@/models/Salle";
 import FicheBilanJournalier from "@/models/FicheBilanJournalier";
 import Pesee from "@/models/Pesee";
+import { migrerEffectifsSalles } from "@/lib/repartirEffectifs";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -32,7 +33,10 @@ export async function GET(_request: Request, { params }: Params) {
     return NextResponse.json({ error: "Salle introuvable" }, { status: 404 });
   }
 
-  return NextResponse.json(salle);
+  await migrerEffectifsSalles(salle.bandeId.toString());
+  const salleMigree = await Salle.findById(id);
+
+  return NextResponse.json(salleMigree);
 }
 
 export async function PUT(request: Request, { params }: Params) {
