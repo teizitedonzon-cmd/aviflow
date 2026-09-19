@@ -1,5 +1,5 @@
-const CACHE_NAME = "avigestion-cache-v1";
-const URLS_A_METTRE_EN_CACHE = ["/dashboard", "/login"];
+const CACHE_NAME = "aviflow-assets-v2";
+const URLS_A_METTRE_EN_CACHE = ["/login", "/manifest.json"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -17,14 +17,20 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-// Stratégie "réseau d'abord, cache en secours" : on privilégie les données fraîches,
-// mais l'app reste consultable hors-ligne si le réseau est indisponible.
+// Seuls les fichiers statiques publics sont mis en cache. Les réponses API et les
+// pages authentifiées restent hors cache pour ne jamais exposer les données d'un
+// producteur à un autre utilisateur du même appareil.
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+
+  const url = new URL(event.request.url);
+  const estFichierStatique = ["script", "style", "image", "font"].includes(event.request.destination);
+  if (url.origin !== self.location.origin || url.pathname.startsWith("/api/") || !estFichierStatique) return;
 
   event.respondWith(
     fetch(event.request)
       .then((reponse) => {
+        if (!reponse.ok) return reponse;
         const copie = reponse.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copie));
         return reponse;
@@ -40,7 +46,7 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title || "AviFlow", {
       body: data.body || "",
-      icon: "/next.svg",
+      icon: "/favicon.ico",
     })
   );
 });
