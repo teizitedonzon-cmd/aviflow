@@ -6,6 +6,7 @@ import Bande from "@/models/Bande";
 import Salle from "@/models/Salle";
 import FicheBilanJournalier from "@/models/FicheBilanJournalier";
 import { envoyerAlertePush } from "@/lib/webpush";
+import { migrerEffectifsSalles } from "@/lib/repartirEffectifs";
 
 // Seuil au-delà duquel une mortalité journalière est considérée anormale
 const SEUIL_TAUX_MORTALITE_JOUR = 0.01; // 1% de l'effectif vivant en une journée
@@ -37,6 +38,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Salle introuvable" }, { status: 404 });
   }
 
+  const sallePourMigration = await Salle.findById(salleId).select("bandeId").lean();
+  if (sallePourMigration) await migrerEffectifsSalles(sallePourMigration.bandeId.toString());
+
   const fiches = await FicheBilanJournalier.find({ salleId }).sort({ date: 1 });
   return NextResponse.json(fiches);
 }
@@ -60,11 +64,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Salle introuvable" }, { status: 404 });
   }
 
+  const sallePourMigration = await Salle.findById(salleId).select("bandeId").lean();
+  if (sallePourMigration) await migrerEffectifsSalles(sallePourMigration.bandeId.toString());
+  const mortaliteNombre = Number(mortalite ?? 0);
+  if (!Number.isInteger(mortaliteNombre) || mortaliteNombre < 0) {
+    return NextResponse.json({ error: "La mortalité doit être un nombre entier positif" }, { status: 400 });
+  }
+
   try {
     const fiche = await FicheBilanJournalier.create({
       salleId,
       date,
-      mortalite,
+      mortalite: mortaliteNombre,
       alimentConsommeKg,
       eauConsommeeL,
       traitements,
@@ -72,8 +83,24 @@ export async function POST(request: Request) {
       productionOeufs,
     });
 
+    // Décrément atomique : impossible d'enregistrer plus de morts que de sujets vivants.
+    if (mortaliteNombre > 0) {
+      const salleMiseAJour = await Salle.findOneAndUpdate(
+        { _id: salleId, effectifVivant: { $gte: mortaliteNombre } },
+        { $inc: { effectifVivant: -mortaliteNombre } },
+        { new: true }
+      );
+      if (!salleMiseAJour) {
+        await FicheBilanJournalier.findByIdAndDelete(fiche._id);
+        return NextResponse.json(
+          { error: "La mortalité saisie dépasse l'effectif vivant de la salle" },
+          { status: 400 }
+        );
+      }
+    }
+
     // Alerte automatique si la mortalité du jour dépasse le seuil défini
-    if (mortalite && mortalite > 0) {
+    if (mortaliteNombre > 0) {
       const salle = await Salle.findById(salleId);
       const bande = await Bande.findById(salle.bandeId);
       const ferme = await Ferme.findById(bande.fermeId);
@@ -84,13 +111,13 @@ export async function POST(request: Request) {
       });
       const mortaliteAnterieure = fichesAnterieures.reduce((acc, f) => acc + f.mortalite, 0);
       const effectifVivantAvant = Math.max(bande.effectifInitial - mortaliteAnterieure, 1);
-      const tauxJour = mortalite / effectifVivantAvant;
+      const tauxJour = mortaliteNombre / effectifVivantAvant;
 
       if (tauxJour > SEUIL_TAUX_MORTALITE_JOUR) {
         await envoyerAlertePush(
           ferme.producteurId.toString(),
           "⚠️ Mortalité anormale détectée",
-          `${salle.nom} (${bande.nom}) : ${mortalite} morts aujourd'hui, soit ${(tauxJour * 100).toFixed(1)}% de l'effectif vivant.`
+          `${salle.nom} (${bande.nom}) : ${mortaliteNombre} morts aujourd'hui, soit ${(tauxJour * 100).toFixed(1)}% de l'effectif vivant.`
         );
       }
     }
