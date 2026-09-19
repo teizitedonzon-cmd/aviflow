@@ -14,7 +14,7 @@ interface Bande { typeElevage: "chair" | "ponte"; }
 function aujourdHui() { return new Date().toISOString().slice(0, 10); }
 
 export default function SaisirPage() {
-  const { fermeId, bandeId, salleId } = useParams<{ fermeId: string; bandeId: string; salleId: string }>();
+  const { bandeId, salleId } = useParams<{ bandeId: string; salleId: string }>();
   const [bande, setBande] = useState<Bande | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
 
