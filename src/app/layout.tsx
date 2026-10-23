@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
+import { SosAssistant } from "@/components/SosAssistant";
 
 export const metadata: Metadata = {
   title: "AviFlow — Gestion avicole quotidienne",
@@ -16,7 +17,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr">
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <SosAssistant />
+        </Providers>
       </body>
     </html>
   );
