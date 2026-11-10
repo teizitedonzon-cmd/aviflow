@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import styles from "@/app/shared.module.css";
+import pageStyles from "./page.module.css";
 
 interface Bande {
   _id: string;
@@ -103,20 +104,30 @@ export default function FermePage() {
         <Link href="/dashboard">Mes fermes</Link> / {ferme?.nom}
       </div>
 
-      <div className={styles.titleRow}>
+      <div className={pageStyles.titleRow}>
         <h1>{ferme?.nom}</h1>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
-          <Link href={`/fermes/${fermeId}/historique`} className={styles.secondaryBtn}>
-             Historique
-          </Link>
-          <Link href={`/fermes/${fermeId}/veterinaires`} className={styles.secondaryBtn}>
-            Vétérinaires
-          </Link>
-          <Link href={`/fermes/${fermeId}/rapport`} className={styles.secondaryBtn}>
-            Rapport PDF
-          </Link>
-          <button className={styles.secondaryBtn} onClick={modifierFerme}>Modifier</button>
-          <button className={styles.secondaryBtn} onClick={supprimerFerme}>Supprimer</button>
+        <div className={pageStyles.actions}>
+          <details
+            className={pageStyles.menu}
+            onClick={(event) => {
+              if (event.target instanceof Element && event.target.closest("a, button")) {
+                event.currentTarget.open = false;
+              }
+            }}
+          >
+            <summary aria-label="Autres actions" title="Autres actions">
+              <span aria-hidden="true">☰</span>
+            </summary>
+            <div className={pageStyles.menuItems}>
+              <Link href={`/fermes/${fermeId}/historique`}>Historique</Link>
+              <Link href={`/fermes/${fermeId}/veterinaires`}>Vétérinaires</Link>
+              <Link href={`/fermes/${fermeId}/rapport`}>Rapport PDF</Link>
+              <button type="button" onClick={modifierFerme}>Modifier</button>
+              <button type="button" className={pageStyles.deleteAction} onClick={supprimerFerme}>
+                Supprimer
+              </button>
+            </div>
+          </details>
           <button className={styles.newBtn} onClick={() => setAfficherForm((v) => !v)}>
             + Nouvelle bande
           </button>
