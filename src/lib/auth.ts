@@ -5,6 +5,7 @@ import { connectToDatabase } from "@/lib/mongodb";
 import Producteur from "@/models/Producteur";
 
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET || "dev-secret-change-me",
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
