@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
+import { PasswordField } from "@/components/PasswordField";
 import styles from "./page.module.css";
 
 export default function LoginPage() {
@@ -28,7 +29,7 @@ export default function LoginPage() {
     setChargement(false);
 
     if (resultat?.error) {
-      setErreur("Email ou mot de passe incorrect");
+      setErreur(resultat.error === "CredentialsSignin" ? "Email ou mot de passe incorrect" : resultat.error);
       return;
     }
 
@@ -54,16 +55,13 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
-          <div className={styles.field}>
-            <label htmlFor="password">Mot de passe</label>
-            <input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
+          <PasswordField
+            id="password"
+            label="Mot de passe"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
           <button className={styles.submit} type="submit" disabled={chargement}>
             {chargement ? "Connexion..." : "Se connecter"}
           </button>
