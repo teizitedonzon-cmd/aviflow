@@ -68,18 +68,50 @@ export function SosAssistant() {
   };
 
   return (
-    <div style={{ position: "fixed", right: 20, bottom: 20, zIndex: 1000 }}>
+    <div
+      style={{
+        position: "fixed",
+        top: "calc(16px + env(safe-area-inset-top))",
+        right: 16,
+        zIndex: 1000,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-end",
+        gap: 12,
+      }}
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        style={{
+          border: "none",
+          borderRadius: "999px",
+          background: "linear-gradient(135deg, #cf3f45, #9b0d19)",
+          color: "#fff",
+          padding: "12px 18px",
+          fontWeight: 800,
+          letterSpacing: 0.5,
+          boxShadow: "0 14px 30px rgba(110, 17, 24, 0.35)",
+          cursor: "pointer",
+          fontSize: 16,
+        }}
+      >
+        SOS
+      </button>
+
       {open && (
         <div
           style={{
             width: 360,
-            maxWidth: "calc(100vw - 24px)",
+            maxWidth: "calc(100vw - 32px)",
             background: "#ffffff",
             border: "1px solid #dfeadf",
             borderRadius: 18,
             boxShadow: "0 20px 50px rgba(18, 45, 24, 0.18)",
             overflow: "hidden",
-            marginBottom: 12,
+            display: "flex",
+            flexDirection: "column",
+            maxHeight: "calc(100dvh - 88px)",
           }}
         >
           <div
@@ -112,6 +144,8 @@ export function SosAssistant() {
           <div
             style={{
               height: 280,
+              minHeight: 0,
+              flex: "1 1 auto",
               overflowY: "auto",
               padding: 12,
               background: "#f7faf7",
@@ -195,24 +229,6 @@ export function SosAssistant() {
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={() => setOpen((current) => !current)}
-        style={{
-          border: "none",
-          borderRadius: "999px",
-          background: "linear-gradient(135deg, #cf3f45, #9b0d19)",
-          color: "#fff",
-          padding: "16px 22px",
-          fontWeight: 800,
-          letterSpacing: 0.5,
-          boxShadow: "0 14px 30px rgba(110, 17, 24, 0.35)",
-          cursor: "pointer",
-          fontSize: 16,
-        }}
-      >
-        SOS
-      </button>
     </div>
   );
 }
