@@ -47,8 +47,19 @@ export async function POST(request: Request) {
     );
   } catch (error) {
     console.error("Erreur inscription:", error);
+
+    const message =
+      error instanceof Error && error.message
+        ? error.message
+        : "Une erreur est survenue lors de l'inscription";
+
     return NextResponse.json(
-      { error: "Une erreur est survenue lors de l'inscription" },
+      {
+        error:
+          process.env.NODE_ENV !== "production"
+            ? `Erreur inscription: ${message}`
+            : "Une erreur est survenue lors de l'inscription",
+      },
       { status: 500 }
     );
   }
