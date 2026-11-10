@@ -58,21 +58,33 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="container">
+    <div className="container app-page">
       <header className={styles.header}>
         <div className={styles.brand}><Logo /></div>
         <div className={styles.headerRight}>
-          <span>{session?.user?.name}</span>
+          <span className={styles.userBadge}>{session?.user?.name}</span>
           <button className={styles.logoutBtn} onClick={() => signOut({ callbackUrl: "/login" })}>
             Déconnexion
           </button>
         </div>
       </header>
 
-      <div className={styles.titleRow}>
-        <h1>Mes fermes</h1>
+      <section className={styles.hero}>
+        <div>
+          <p className={styles.kicker}>Accueil</p>
+          <h1>Suivi de ferme</h1>
+        </div>
         <button className={styles.newBtn} onClick={() => setAfficherForm((v) => !v)}>
           + Nouvelle ferme
+        </button>
+      </section>
+
+      <div className={styles.quickActions}>
+        <button type="button" className={styles.primaryAction} onClick={() => setAfficherForm((v) => !v)}>
+          Ajouter
+        </button>
+        <button type="button" className={styles.secondaryAction} onClick={() => window.location.reload()}>
+          Rafraîchir
         </button>
       </div>
 
