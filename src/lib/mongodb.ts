@@ -1,12 +1,6 @@
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI as string;
-
-if (!MONGODB_URI) {
-  throw new Error(
-    "Merci de définir la variable d'environnement MONGODB_URI (ex: dans .env.local)"
-  );
-}
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/aviflow";
 
 /**
  * En environnement serverless (Vercel), chaque appel de fonction peut créer
