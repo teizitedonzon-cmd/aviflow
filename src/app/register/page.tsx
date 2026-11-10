@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
+import { PasswordField } from "@/components/PasswordField";
 import styles from "../login/page.module.css";
 
 export default function RegisterPage() {
@@ -62,17 +63,14 @@ export default function RegisterPage() {
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
-          <div className={styles.field}>
-            <label htmlFor="password">Mot de passe</label>
-            <input
-              id="password"
-              type="password"
-              required
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
+          <PasswordField
+            id="password"
+            label="Mot de passe"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={6}
+          />
           <button className={styles.submit} type="submit" disabled={chargement}>
             {chargement ? "Création..." : "Créer mon compte"}
           </button>
